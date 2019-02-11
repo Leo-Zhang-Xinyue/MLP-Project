@@ -122,7 +122,7 @@ Y_test = test.is_duplicate
 
 #padding zeros
 for dataset, side in itertools.product([X_train, X_dev], ['left', 'right']):
-    dataset[side] = pad_sequences(dataset[side], maxlen=30)
+    dataset[side] = pad_sequences(dataset[side], maxlen=max_seq_length)
 
 
 
