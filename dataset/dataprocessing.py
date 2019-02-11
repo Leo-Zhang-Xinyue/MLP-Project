@@ -80,6 +80,11 @@ for index, row in file_read.iterrows():
                 q2i.append(vocabulary[word])
         file_read = file_read.set_value(index, question, q2i)
 
+#get the maximum length of sentences
+max_seq_length = max(file_read.question1.map(lambda x: len(x)).max(),
+                     file_read.question2.map(lambda x: len(x)).max())
+
+
 #shuffle the dataset
 file_read = file_read.sample(frac=1)
 
