@@ -10,6 +10,8 @@ import pandas as pd
 import nltk
 import re
 import itertools
+import numpy as np
+from gensim.models import KeyedVectors
 from keras.preprocessing.sequence import pad_sequences
 
 
@@ -62,6 +64,9 @@ file_read = pd.read_csv('quora_duplicate_questions.tsv', sep = '\t', header = 0,
 nltk.download('stopwords')
 stops = set(nltk.corpus.stopwords.words('english'))
 
+#pretrained model of the word emeddings
+word2vec = KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin.gz', binary=True)
+
 #convert the question text into lists of word indices
 vocabulary = {}
 idx_voc = []
@@ -70,7 +75,7 @@ for index, row in file_read.iterrows():
     for question in questions:
         q2i = []
         for word in text_to_word_list(row[question]):
-            if word in stops:
+            if word in stops and word not in word2vec.vocab:
                 continue
             if word not in vocabulary:
                 vocabulary[word] = len(idx_voc)
@@ -79,6 +84,15 @@ for index, row in file_read.iterrows():
             else:
                 q2i.append(vocabulary[word])
         file_read = file_read.set_value(index, question, q2i)
+
+embedding_dim = 300
+embeddings = 1 * np.random.randn(len(vocabulary) + 1, embedding_dim)
+embeddings[0] = 0
+
+#building the embedding matrix
+for word, index in vocabulary.items():
+    if word in word2vec.vocab:
+        embeddings[index] = word2vec.word_vec(word)
 
 #get the maximum length of sentences
 max_seq_length = max(file_read.question1.map(lambda x: len(x)).max(),
@@ -108,6 +122,8 @@ Y_test = test.is_duplicate
 #padding zeros
 for dataset, side in itertools.product([X_train, X_dev], ['left', 'right']):
     dataset[side] = pad_sequences(dataset[side], maxlen=30)
+
+
 
 
 
